@@ -1,0 +1,37 @@
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{% url 'home' %}">Medi<strong>Tech</strong></a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                {% if user.is_authenticated %}
+                    <li class="{% ifequal navbar 'home'%}active{% endifequal %}">
+                      <a href="{% url 'home' %}"><i class="fa fa-home"></i>&nbsp;Home</a></li>
+                    <li class="{% ifequal navbar 'schedule'%}active{% endifequal %}">
+                      <a href="{% ifequal navbar 'schedule'%}#{% else %}{% url 'schedule' %}{% endifequal %}">
+                        <i class="fa fa-calendar"></i>&nbsp;Schedule</a></li>
+                    <li class="{% ifequal navbar 'my_medical_information'%}active{% endifequal %}">
+                      <a href="{% ifequal navbar 'my_medical_information'%}#{% else %}{% url 'my_medical_information' %}{% endifequal %}">
+                        <i class="fa fa-heart"></i>&nbsp;Medical Information</a></li>
+                {% endif %}
+            </ul>
+            {% if user.is_authenticated %}
+                <ul class="nav navbar-nav navbar-right">
+                    <li><p class="navbar-text">{{ user.get_full_name }}</p></li>
+                    <li><a href="{% url 'logout' %}"><i class="fa fa-sign-out"></i>&nbsp;Sign Out</a></li>
+                </ul>
+            {% elif navbar != 'login' %}
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="{% url 'login' %}"><i class="fa fa-sign-in"></i>&nbsp;Sign In</a></li>
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+</nav>

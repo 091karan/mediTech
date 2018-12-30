@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'health.apps.HealthConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -54,7 +55,7 @@ ROOT_URLCONF = 'mediTech.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['mediTech/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -117,8 +118,16 @@ USE_L10N = True
 
 USE_TZ = True
 
+AUTH_USER_MODEL = 'health.User'
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR,'mediTech/static')
+]
+
+STATIC_ROOT=os.path.join(BASE_DIR,'static')
 
 STATIC_URL = '/static/'
