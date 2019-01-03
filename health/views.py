@@ -114,9 +114,21 @@ def full_signup_context(user):
             "May", "Jun", "Jul", "Aug",
             "Sep", "Oct", "Nov", "Dec"
         ],
+        "years" : range(1,100),
         "hospitals": Hospital.objects.all(),
         "groups": Group.objects.all(),
         "sexes": MedicalInformation.SEX_CHOICES,
+        "specialisation" : DoctorInformation.SPECIALISATION,
+        "visit_days": DoctorInformation.VISIT_DAYS,
+        "shifts": ["Yes","No"],
+        "times": [
+            "7AM","7.30AM","8AM","8.30AM","9AM","9.30AM","10AM","10.30AM",
+            "11AM","11.30AM","12PM","12.30PM","1PM","1.30PM","2PM","2.30PM",
+            "3PM","3.30PM","4PM","4.30PM","5PM","5.30PM","6PM","6.30PM",
+            "7PM","7.30PM","8PM","8.30PM","9PM","9.30PM","10PM","10.30PM","11PM","11.30PM",
+            "12AM","12.30AM","1AM","1.30AM","2AM","2.30AM","3AM","3.30AM",
+            "4AM","4.30AM","5AM","5.30AM","6AM","6.30AM"
+        ],
         "user_sex_other": (user and user.medical_information and
             user.medical_information.sex not in MedicalInformation.SEX_CHOICES)
     }
@@ -165,6 +177,7 @@ def medical_information(request, user_id):
             context['error_message'] = message
 
     context["requested_user"] = requested_user
+    context["is_patient"] = requested_user.is_patient()
     context["user"] = request.user
     context["requested_hospital"] = requested_user.hospital
     context['is_signup'] = False
@@ -192,6 +205,7 @@ def handle_user_form(request, body, user=None):
     patient_group = Group.objects.get(name='Patient')
     group = Group.objects.get(pk=int(group)) if group else patient_group
     is_patient = group == patient_group
+    is_doctor = not is_patient
     phone = form_utilities.sanitize_phone(body.get("phone_number"))
     month = int(body.get("month"))
     day = int(body.get("day"))
@@ -209,6 +223,17 @@ def handle_user_form(request, body, user=None):
     medical_conditions = body.get("medical_conditions")
     family_history = body.get("family_history")
     additional_info = body.get("additional_info")
+    specialisation = body.get("specialisation")
+    years_of_experience = body.get("years_of_experience")
+    fee = body.get("fee")
+    degree = body.get("degree")
+    visit_days = body.get("visit_days")
+    two_shift = body.get("two_shift")
+    first_shift_start = body.get("first_shift_start")
+    first_shift_end = body.get("first_shift_end")
+    second_shift_start = body.get("second_shift_start") if two_shift=="Yes" else ""
+    second_shift_end = body.get("second_shift_end") if two_shift=="Yes" else ""
+
     if not all([first_name, last_name, email, phone,
                 month, day, year, date]):
         return None, "All fields are required."
@@ -218,6 +243,10 @@ def handle_user_form(request, body, user=None):
     if (user and user.is_patient() and not user.is_superuser) and not all([company, policy]):
         return None, "Insurance information is required."
     if user:
+        if(1):
+            print("hello")
+        elif(2):
+            print("hello2")
         user.email = email
         user.phone_number = phone
         user.first_name = first_name
@@ -242,7 +271,7 @@ def handle_user_form(request, body, user=None):
                 addition(request, user.medical_information.insurance)
             user.medical_information.save()
             change(request, user.medical_information, 'Changed fields.')
-        elif user.is_patient():
+        if user.is_patient() and user.medical_information is None:
             insurance = Insurance.objects.create(policy_number=policy,
                                                  company=company)
             addition(request, insurance)
@@ -254,6 +283,31 @@ def handle_user_form(request, body, user=None):
             )
             addition(request, user.medical_information)
             user.medical_information = medical_information
+
+        if is_doctor and user.doctor_information is not None:
+            print("HELLLOOO")
+            user.doctor_information.specialisation = specialisation
+            user.doctor_information.years_of_experience = years_of_experience
+            user.doctor_information.fee = fee
+            user.doctor_information.degree = degree
+            user.doctor_information.visit_days = visit_days
+            user.doctor_information.two_shift = two_shift
+            user.doctor_information.first_shift_start = first_shift_start
+            user.doctor_information.first_shift_end = first_shift_end
+            user.doctor_information.second_shift_start = second_shift_start
+            user.doctor_information.second_shift_end = second_shift_end
+            user.doctor_information.save()
+            change(request, user.doctor_information, 'Changed fields.')
+
+        if is_doctor and user.doctor_information is None:
+            print("helloooo")
+            doctor_information = DoctorInformation.objects.create(specialisation=specialisation,
+            years_of_experience=years_of_experience,fee=fee,degree=degree,visit_days=visit_days,
+            two_shift=two_shift,first_shift_start=first_shift_start,first_shift_end=first_shift_end,
+            second_shift_start=second_shift_start,second_shift_end=second_shift_end
+            )
+            #addition(request,user.doctor_information)
+            user.doctor_information = doctor_information
 
         user.save()
         change(request, user, 'Changed fields.')
@@ -271,15 +325,21 @@ def handle_user_form(request, body, user=None):
             additional_info=additional_info, insurance=insurance,
             medical_conditions=medical_conditions
         )
+        doctor_information = DoctorInformation.objects.create(specialisation=specialisation,
+        years_of_experience=years_of_experience,fee=fee,degree=degree,visit_days=visit_days,
+        two_shift=two_shift,first_shift_start=first_shift_start,first_shift_end=first_shift_end,
+        second_shift_start=second_shift_start,second_shift_end=second_shift_end
+        )
         user = User.objects.create_user(email, email=email,
             password=password, date_of_birth=date, phone_number=phone,
             first_name=first_name, last_name=last_name,
-            medical_information=medical_information)
+            medical_information=medical_information,doctor_information=doctor_information)
         if user is None:
             return None, "We could not create that user. Please try again."
         request.user = user
         addition(request, user)
         addition(request, medical_information)
+        addition(request,doctor_information)
         addition(request, insurance)
         group.user_set.add(user)
         return user, None

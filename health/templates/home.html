@@ -23,10 +23,10 @@
             <tbody>
             {% for appointment in user.upcoming_appointments.all %}
                 <tr>
-                    {% if user.is_patient or user.is_nurse %}
+                    {% if user.is_patient %}
                         <td>{% include 'user_link.html' with user=appointment.doctor %}</td>
                     {% endif %}
-                    {% if user.is_doctor or user.is_nurse %}
+                    {% if user.is_doctor %}
                         <td>{% include 'user_link.html' with user=appointment.patient %}</td>
                     {% endif %}
                     <td>{{ appointment.date }}</td>

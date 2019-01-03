@@ -5,8 +5,8 @@ from datetime import timedelta
 from django.contrib.auth.models import AbstractUser, Group
 
 class Insurance(models.Model):
-    policy_number = models.CharField(max_length=200)
-    company = models.CharField(max_length=200)
+    policy_number = models.CharField(max_length=200, null=True)
+    company = models.CharField(max_length=200, null=True)
 
     def __repr__(self):
         return "{0} with {1}".format(self.policy_number, self.company)
@@ -24,7 +24,7 @@ class MedicalInformation(models.Model):
         'Intersex',
     )
     sex = models.CharField(max_length=50)
-    insurance = models.ForeignKey(Insurance,on_delete=models.CASCADE)
+    insurance = models.ForeignKey(Insurance,on_delete=models.CASCADE, null=True)
     medications = models.CharField(max_length=200, null=True)
     allergies = models.CharField(max_length=200, null=True)
     medical_conditions = models.CharField(max_length=200, null=True)
@@ -53,15 +53,64 @@ class Hospital(models.Model):
         return ("%s at %s, %s, %s %s" % self.name, self.address, self.city,
                 self.state, self.zipcode)
 
+class DoctorInformation(models.Model):
+    specialisation = models.CharField(max_length=100,null=True)
+    years_of_experience = models.CharField(max_length=2,null=True)
+    fee = models.CharField(max_length=5,null=True)
+    degree = models.CharField(max_length=200,null=True)
+    visit_days = models.CharField(max_length=200,null=True)
+    two_shift = models.CharField(max_length=10,null=True)
+    first_shift_start = models.CharField(max_length=10,null=True)
+    first_shift_end = models.CharField(max_length=10,null=True)
+    second_shift_start = models.CharField(max_length=10,null=True)
+    second_shift_end = models.CharField(max_length=10,null=True)
+
+    VISIT_DAYS = (
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday',
+    )
+
+    SPECIALISATION = (
+        'Dentist',
+        'Gynecologist/Obstetrician',
+        'General Physician',
+        'Dermatologist',
+        'Ear-Nose-Throat(ENT)',
+        'Homoeopath',
+        'Ayurveda',
+    )
+
+    TWO_DAYS_SHIFT = (
+        'Yes',
+        'No',
+    )
+
+    def __repr__(self):
+        return (("specialisation: {0}, years_of_experience: {1}, fee: {2}, degree: {3}, " +
+                "visit_days : {4}, two_shift: {5}," +
+                "first_shift_start: {6}, first_shift_end: {7}" +
+                "second_shift_start: {8}, second_shift_end: {9}").format(
+                    self.specialisation, self.years_of_experience,
+                    self.fee, self.degree, self.visit_days, self.two_shift,
+                    self.first_shift_start, self.first_shift_end,
+                    self.second_shift_start,self.second_shift_end
+                ))
+
 
 class User(AbstractUser):
-    date_of_birth = models.DateField()
+    date_of_birth = models.DateField(null=True)
     phone_number = models.CharField(max_length=30)
     medical_information = models.ForeignKey(MedicalInformation, null=True,on_delete=models.CASCADE)
     emergency_contact = models.ForeignKey(EmergencyContact, null=True,on_delete=models.CASCADE)
     hospital = models.ForeignKey(Hospital,null=True,on_delete=models.CASCADE)
+    doctor_information = models.ForeignKey(DoctorInformation,null=True,on_delete=models.CASCADE)
 
-    REQUIRED_FIELDS = ['date_of_birth', 'phone_number', 'email', 'first_name',
+    REQUIRED_FIELDS = ['phone_number', 'email', 'first_name',
                        'last_name']
 
     def all_patients(self):
